@@ -80,7 +80,15 @@ namespace UdpCommunication
 
         private async void SendMessageBtn_Clicked(object sender, EventArgs e)
         {
-            await socket.SendToAsync(Encoding.UTF8.GetBytes(MessageEditor.Text), IpPortParser.ParseIpPort(RemotIpPortEditor.Text));
+            IPEndPoint? iPEndPoint = IpPortParser.GetEndPointByName(RemotIpPortEditor.Text);
+            if (iPEndPoint != null)
+            {
+                await socket.SendToAsync(Encoding.UTF8.GetBytes(MessageEditor.Text), iPEndPoint);
+            }
+            else
+            {
+                ReceiveMessageEditor.Text += $"尝试发送到 {RemotIpPortEditor.Text} 失败，请检查输入是否正确。\n";
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -54,6 +55,46 @@ namespace UdpCommunication.Utils
             }
 
             return new IPEndPoint(ipAddress, port);
+        }
+        public static IPEndPoint? GetEndPointByName(string name)
+        {
+            string[] parts = name.Split(':');
+            if (parts.Length != 2)
+            {
+                // RainMeadow.Debug("Invalid IP format without colon: " + name);
+                parts = new string[2];
+                parts[0] = name;
+                parts[1] = "8720"; //default port
+            }
+
+            IPAddress? address = null;
+            try
+            {
+                address = IPAddress.Parse(parts[0]);
+            }
+            catch (FormatException)
+            {
+                try
+                {
+                    address = Dns.GetHostEntry(parts[0])
+                        .AddressList
+                        .Where(x => x.AddressFamily == AddressFamily.InterNetwork)
+                        .FirstOrDefault();
+                }
+                catch (SocketException)
+                {
+                    if (address == null) return null;
+                }
+            }
+
+            if (!ushort.TryParse(parts[1], out ushort port))
+            {
+                //RainMeadow.Debug("Invalid port format: " + parts[1]);
+                return null;
+            }
+
+            if (address == null) return null;
+            return new IPEndPoint(address, port);
         }
     }
 }
