@@ -29,16 +29,13 @@
                     SemanticProperties.Hint="Counts the number of times you click"
                     Clicked="SendMessageBtn_Clicked"
                     HorizontalOptions="Fill" />
-                
             </VerticalStackLayout>
             <Grid
                 Padding="30,0,30,30"
                 Grid.Column="1">
                 <Editor
                     x:Name="ReceiveMessageEditor"
-                    IsReadOnly="True"
-                    Text="">                    
-                </Editor>
+                    IsReadOnly="True"></Editor>
             </Grid>
         </Grid>
     </ScrollView>

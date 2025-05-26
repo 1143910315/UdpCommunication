@@ -45,10 +45,10 @@ namespace UdpCommunication
             {
                 throw new Exception("Failed to claim a socket port");
             }
-            
+
             LocalIpPortEditor.Text = socket.LocalEndPoint?.ToString() ?? "发生错误";
 
-            
+
             // 创建计时器，间隔 100ms
             timer = new(100);
             // 绑定事件
