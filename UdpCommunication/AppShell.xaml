@@ -7,7 +7,7 @@
     Title="UdpCommunication">
 
     <ShellContent
-        Title="Home"
+        Title="Udp通信"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
