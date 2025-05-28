@@ -16,7 +16,9 @@ namespace UdpCommunication
         const int DEFAULT_PORT = 8720;
         const int FIND_PORT_ATTEMPTS = 10;
         readonly int port;
-        readonly System.Timers.Timer timer;
+        ushort autoSendPort = 8721;
+        IPEndPoint? lastEndPoint = null;
+        bool running = true;
 
         public MainPage()
         {
@@ -48,34 +50,69 @@ namespace UdpCommunication
 
             LocalIpPortEditor.Text = socket.LocalEndPoint?.ToString() ?? "发生错误";
 
-
-            // 创建计时器，间隔 100ms
-            timer = new(100);
-            // 绑定事件
-            timer.Elapsed += (e, arg) =>
+            new Thread(() =>
             {
-                while (socket.Available > 0)
+                try
                 {
-                    try
+                    var buffer = new byte[1024];
+                    while (running)
                     {
-                        var buffer = new byte[socket.Available];
-                        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Loopback, 8720);
-                        socket.ReceiveFrom(buffer, ref remoteEndPoint);
-                        string msg = Encoding.UTF8.GetString(buffer);
-                        Application.Current?.Dispatcher.Dispatch(() =>
+                        if (socket.Poll(Timeout.InfiniteTimeSpan, SelectMode.SelectRead))
                         {
-                            RemotIpPortEditor.Text = remoteEndPoint.ToString();
-                            ReceiveMessageEditor.Text += $"{remoteEndPoint}:{msg}\n";
-                        });
-                    }
-                    catch (Exception)
-                    {
+                            while (socket.Available > buffer.Length)
+                            {
+                                buffer = new byte[socket.Available];
+                            }
+                            EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Loopback, port);
+                            int readBytesLength = socket.ReceiveFrom(buffer, ref remoteEndPoint);
+                            if (AutoSendCheckbox.IsChecked)
+                            {
+                                if (remoteEndPoint is IPEndPoint endPoint)
+                                {
+                                    if (endPoint.Port == autoSendPort)
+                                    {
+                                        if (lastEndPoint != null)
+                                        {
+                                            socket.SendTo(buffer, readBytesLength, SocketFlags.None, lastEndPoint);
+                                        }
+                                        else
+                                        {
+                                            Application.Current?.Dispatcher.Dispatch(() =>
+                                            {
+                                                ReceiveMessageEditor.Text += $"丢弃来自{autoSendPort}端口的数据，因为还没有发送到这个端口的数据\n";
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (lastEndPoint?.Port != endPoint.Port)
+                                        {
+                                            lastEndPoint = endPoint;
+                                            Application.Current?.Dispatcher.Dispatch(() =>
+                                            {
+                                                ReceiveMessageEditor.Text += $"转发来自{autoSendPort}端口的数据到{endPoint}\n";
+                                            });
+                                        }
+                                        socket.SendTo(buffer, readBytesLength, SocketFlags.None, new IPEndPoint(IPAddress.Loopback, autoSendPort));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                string msg = Encoding.UTF8.GetString(buffer, 0, readBytesLength);
+                                Application.Current?.Dispatcher.Dispatch(() =>
+                                {
+                                    RemotIpPortEditor.Text = remoteEndPoint.ToString();
+                                    ReceiveMessageEditor.Text += $"{remoteEndPoint}:{msg}\n";
+                                });
+                            }
+                        }
                     }
                 }
-                timer.Start();
-            };
-            timer.AutoReset = false; // 是否重复触发
-            timer.Start();
+                catch (Exception)
+                {
+                }
+            }).Start();
         }
 
         private async void SendMessageBtn_Clicked(object sender, EventArgs e)
@@ -89,6 +126,26 @@ namespace UdpCommunication
             {
                 ReceiveMessageEditor.Text += $"尝试发送到 {RemotIpPortEditor.Text} 失败，请检查输入是否正确。\n";
             }
+        }
+
+        private void AutoSendTapGesture_Tapped(object sender, TappedEventArgs e)
+        {
+            AutoSendCheckbox.IsChecked = !AutoSendCheckbox.IsChecked;
+        }
+
+        private void AutoSendEditor_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ushort.TryParse(AutoSendEditor.Text, out ushort newPort))
+            {
+                autoSendPort = newPort;
+                AutoSendLabel.Text = $"自动转发数据到指定端口{newPort}";
+            }
+        }
+
+        private void ContentPage_Disappearing(object sender, EventArgs e)
+        {
+            running = false;
+            socket.Close();
         }
     }
 }

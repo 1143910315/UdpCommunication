@@ -2,7 +2,8 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="UdpCommunication.MainPage">
+    x:Class="UdpCommunication.MainPage"
+    Disappearing="ContentPage_Disappearing">
     <ScrollView>
         <Grid
             ColumnDefinitions="*,*">
@@ -29,6 +30,26 @@
                     SemanticProperties.Hint="Counts the number of times you click"
                     Clicked="SendMessageBtn_Clicked"
                     HorizontalOptions="Fill" />
+                <HorizontalStackLayout
+                    HorizontalOptions="Start">
+                    <HorizontalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer
+                            x:Name="AutoSendTapGesture"
+                            Tapped="AutoSendTapGesture_Tapped"></TapGestureRecognizer>
+                    </HorizontalStackLayout.GestureRecognizers>
+                    <CheckBox
+                        x:Name="AutoSendCheckbox">
+                    </CheckBox>
+                    <Label
+                        x:Name="AutoSendLabel"
+                        Text="自动转发数据到指定端口8721"
+                        Padding="0,0,20,0"
+                        VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Editor
+                    x:Name="AutoSendEditor"
+                    Text="8721"
+                    TextChanged="AutoSendEditor_TextChanged"></Editor>
             </VerticalStackLayout>
             <Grid
                 Padding="30,0,30,30"
