@@ -14,6 +14,7 @@ namespace UdpCommunication {
         const int DEFAULT_PORT = 8720;
         const int FIND_PORT_ATTEMPTS = 10;
         readonly int port;
+        string autoSendIP = "127.0.0.1";
         ushort autoSendPort = 8721;
         IPEndPoint? lastEndPoint = null;
         bool running = true;
@@ -55,20 +56,31 @@ namespace UdpCommunication {
                                 if (remoteEndPoint is IPEndPoint endPoint) {
                                     if (endPoint.Port == autoSendPort) {
                                         if (lastEndPoint != null) {
+                                            Application.Current?.Dispatcher.Dispatch(() => {
+                                                if (FullLogCheckbox.IsChecked) {
+                                                    ReceiveMessageEditor.Text += $"接收 {remoteEndPoint} 并发送 {readBytesLength} 个字节到 {lastEndPoint}\n";
+                                                }
+                                            });
                                             socket.SendTo(buffer, readBytesLength, SocketFlags.None, lastEndPoint);
                                         } else {
                                             Application.Current?.Dispatcher.Dispatch(() => {
-                                                ReceiveMessageEditor.Text += $"丢弃来自{autoSendPort}端口的数据，因为还没有发送到这个端口的数据\n";
+                                                ReceiveMessageEditor.Text += $"丢弃来自 {remoteEndPoint} 的数据，因为还没有发送到这个端口的数据\n";
                                             });
                                         }
                                     } else {
                                         if (lastEndPoint?.Port != endPoint.Port) {
                                             lastEndPoint = endPoint;
                                             Application.Current?.Dispatcher.Dispatch(() => {
-                                                ReceiveMessageEditor.Text += $"转发来自{autoSendPort}端口的数据到{endPoint}\n";
+                                                ReceiveMessageEditor.Text += $"将转发来自 {autoSendPort} 端口的数据到 {endPoint}\n";
                                             });
                                         }
-                                        socket.SendTo(buffer, readBytesLength, SocketFlags.None, new IPEndPoint(IPAddress.Loopback, autoSendPort));
+                                        IPEndPoint targetEndPoint = new(IPAddress.Parse(autoSendIP), autoSendPort);
+                                        Application.Current?.Dispatcher.Dispatch(() => {
+                                            if (FullLogCheckbox.IsChecked) {
+                                                ReceiveMessageEditor.Text += $"接收 {remoteEndPoint} 并发送 {readBytesLength} 个字节到 {targetEndPoint}\n";
+                                            }
+                                        });
+                                        socket.SendTo(buffer, readBytesLength, SocketFlags.None, targetEndPoint);
                                     }
                                 }
                             } else {
@@ -80,7 +92,10 @@ namespace UdpCommunication {
                             }
                         }
                     }
-                } catch (Exception) {
+                } catch (Exception e) {
+                    Application.Current?.Dispatcher.Dispatch(() => {
+                        ReceiveMessageEditor.Text += $"{e}\n";
+                    });
                 }
             }).Start();
         }
@@ -98,8 +113,11 @@ namespace UdpCommunication {
             AutoSendCheckbox.IsChecked = !AutoSendCheckbox.IsChecked;
         }
 
-        private void AutoSendEditor_TextChanged(object sender, TextChangedEventArgs e) {
-            if (ushort.TryParse(AutoSendEditor.Text, out ushort newPort)) {
+        private void AutoSendIPEditor_TextChanged(object sender, TextChangedEventArgs e) {
+            autoSendIP = AutoSendIPEditor.Text;
+        }
+        private void AutoSendPortEditor_TextChanged(object sender, TextChangedEventArgs e) {
+            if (ushort.TryParse(AutoSendPortEditor.Text, out ushort newPort)) {
                 autoSendPort = newPort;
                 AutoSendLabel.Text = $"自动转发数据到指定端口{newPort}";
             }

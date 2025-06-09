@@ -4,60 +4,75 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="UdpCommunication.MainPage"
     Disappearing="ContentPage_Disappearing">
-    <ScrollView>
-        <Grid
-            ColumnDefinitions="*,*">
-            <VerticalStackLayout
-                Padding="30,0"
-                Spacing="25"
-                Grid.Column="0">
+    <Grid
+        ColumnDefinitions="*,*">
+        <VerticalStackLayout
+            Padding="30,0"
+            Spacing="25"
+            Grid.Column="0">
+            <Label
+                Text="本地ip端口" />
+            <Editor
+                x:Name="LocalIpPortEditor"
+                IsReadOnly="True"></Editor>
+            <Label
+                Text="目标ip端口" />
+            <Editor
+                x:Name="RemotIpPortEditor"></Editor>
+            <Label
+                Text="发送内容" />
+            <Editor
+                x:Name="MessageEditor"></Editor>
+            <Button
+                x:Name="SendMessageBtn"
+                Text="发送"
+                SemanticProperties.Hint="Counts the number of times you click"
+                Clicked="SendMessageBtn_Clicked"
+                HorizontalOptions="Fill" />
+            <HorizontalStackLayout
+                HorizontalOptions="Start">
+                <HorizontalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer
+                        x:Name="AutoSendTapGesture"
+                        Tapped="AutoSendTapGesture_Tapped"></TapGestureRecognizer>
+                </HorizontalStackLayout.GestureRecognizers>
+                <CheckBox
+                    x:Name="AutoSendCheckbox">
+                </CheckBox>
                 <Label
-                    Text="本地ip端口" />
+                    x:Name="AutoSendLabel"
+                    Text="自动转发数据到指定端口8721"
+                    Padding="0,0,20,0"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout>
                 <Editor
-                    x:Name="LocalIpPortEditor"
-                    IsReadOnly="True"></Editor>
-                <Label
-                    Text="目标ip端口" />
+                    x:Name="AutoSendIPEditor"
+                    WidthRequest="300"
+                    Text="127.0.0.1"
+                    TextChanged="AutoSendIPEditor_TextChanged"></Editor>
                 <Editor
-                    x:Name="RemotIpPortEditor"></Editor>
-                <Label
-                    Text="发送内容" />
-                <Editor
-                    x:Name="MessageEditor"></Editor>
-                <Button
-                    x:Name="SendMessageBtn"
-                    Text="发送"
-                    SemanticProperties.Hint="Counts the number of times you click"
-                    Clicked="SendMessageBtn_Clicked"
-                    HorizontalOptions="Fill" />
-                <HorizontalStackLayout
-                    HorizontalOptions="Start">
-                    <HorizontalStackLayout.GestureRecognizers>
-                        <TapGestureRecognizer
-                            x:Name="AutoSendTapGesture"
-                            Tapped="AutoSendTapGesture_Tapped"></TapGestureRecognizer>
-                    </HorizontalStackLayout.GestureRecognizers>
-                    <CheckBox
-                        x:Name="AutoSendCheckbox">
-                    </CheckBox>
-                    <Label
-                        x:Name="AutoSendLabel"
-                        Text="自动转发数据到指定端口8721"
-                        Padding="0,0,20,0"
-                        VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Editor
-                    x:Name="AutoSendEditor"
+                    x:Name="AutoSendPortEditor"
+                    WidthRequest="80"
                     Text="8721"
-                    TextChanged="AutoSendEditor_TextChanged"></Editor>
-            </VerticalStackLayout>
-            <Grid
-                Padding="30,0,30,30"
-                Grid.Column="1">
-                <Editor
-                    x:Name="ReceiveMessageEditor"
-                    IsReadOnly="True"></Editor>
-            </Grid>
+                    TextChanged="AutoSendPortEditor_TextChanged"></Editor>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout>
+                <CheckBox
+                    x:Name="FullLogCheckbox">
+                </CheckBox>
+                <Label
+                    Text="详细日志"
+                    Padding="0,0,20,0"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+        <Grid
+            Padding="30,0,30,30"
+            Grid.Column="1">
+            <Editor
+                x:Name="ReceiveMessageEditor"
+                IsReadOnly="True"></Editor>
         </Grid>
-    </ScrollView>
+    </Grid>
 </ContentPage>
